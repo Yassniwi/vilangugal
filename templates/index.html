@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Fauna - Animals Chatbot</title>
+<style>
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0;
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: linear-gradient(135deg, #efebe9, #fff3e0);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+    }
+
+    .chat-container {
+        width: 420px;
+        max-width: 95vw;
+        height: 620px;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+
+    .chat-header {
+        background: #6d4c41;
+        color: white;
+        padding: 16px 20px;
+        font-size: 20px;
+        font-weight: 600;
+        text-align: center;
+    }
+
+    .chat-header span {
+        font-size: 13px;
+        display: block;
+        font-weight: 400;
+        opacity: 0.9;
+        margin-top: 2px;
+    }
+
+    .chat-messages {
+        flex: 1;
+        padding: 16px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        background: #fdfaf7;
+    }
+
+    .message {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 14px;
+        line-height: 1.4;
+        font-size: 14px;
+        white-space: pre-wrap;
+    }
+
+    .message.user {
+        align-self: flex-end;
+        background: #6d4c41;
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .message.bot {
+        align-self: flex-start;
+        background: #ede0da;
+        color: #333;
+        border-bottom-left-radius: 4px;
+    }
+
+    .chat-input {
+        display: flex;
+        border-top: 1px solid #eee;
+        padding: 10px;
+        background: white;
+    }
+
+    .chat-input input {
+        flex: 1;
+        padding: 10px 12px;
+        border: 1px solid #ddd;
+        border-radius: 20px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    .chat-input button {
+        margin-left: 8px;
+        padding: 10px 18px;
+        border: none;
+        border-radius: 20px;
+        background: #6d4c41;
+        color: white;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .chat-input button:hover {
+        background: #563b32;
+    }
+
+    .typing {
+        font-style: italic;
+        color: #999;
+        font-size: 13px;
+        align-self: flex-start;
+        padding-left: 6px;
+    }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">
+        🐾 Fauna
+        <span>Your friendly animal assistant</span>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+        <div class="message bot">
+            Hi! I'm Fauna 🦁 Ask me anything about animals - species, habitats, behavior, or conservation!
+        </div>
+    </div>
+
+    <div class="chat-input">
+        <input type="text" id="userInput" placeholder="Ask about animals..." autocomplete="off">
+        <button id="sendBtn">Send</button>
+    </div>
+</div>
+
+<script>
+    const chatMessages = document.getElementById("chatMessages");
+    const userInput = document.getElementById("userInput");
+    const sendBtn = document.getElementById("sendBtn");
+
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement("div");
+        messageDiv.classList.add("message", sender);
+        messageDiv.textContent = text;
+        chatMessages.appendChild(messageDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function showTyping() {
+        const typingDiv = document.createElement("div");
+        typingDiv.classList.add("typing");
+        typingDiv.id = "typingIndicator";
+        typingDiv.textContent = "Fauna is typing...";
+        chatMessages.appendChild(typingDiv);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTyping() {
+        const typingDiv = document.getElementById("typingIndicator");
+        if (typingDiv) {
+            typingDiv.remove();
+        }
+    }
+
+    async function sendMessage() {
+        const message = userInput.value.trim();
+        if (!message) return;
+
+        addMessage(message, "user");
+        userInput.value = "";
+        showTyping();
+
+        try {
+            const response = await fetch("/chat", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+            removeTyping();
+            addMessage(data.reply, "bot");
+        } catch (error) {
+            removeTyping();
+            addMessage("Sorry, I couldn't connect right now. Please try again.", "bot");
+        }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    userInput.addEventListener("keypress", function (event) {
+        if (event.key === "Enter") {
+            sendMessage();
+        }
+    });
+</script>
+
+</body>
+</html>
